@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'us-west-2'
+        TF_VAR_region = "${AWS_REGION}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo/your-terraform-code.git'
+            }
+        }
+
+        stage('Install Terraform') {
+            steps {
+                sh 'wget https://releases.hashicorp.com/terraform/1.4.0/terraform_1.4.0_linux_amd64.zip'
+                sh 'unzip terraform_1.4.0_linux_amd64.zip'
+                sh 'mv terraform /usr/local/bin/'
+            }
+        }
+
+        stage('Initialize Terraform') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+
+        stage('Plan Infrastructure') {
+            steps {
+                sh 'terraform plan -out=tfplan'
+            }
+        }
+
+        stage('Apply Infrastructure') {
+            steps {
+                sh 'terraform apply tfplan'
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
